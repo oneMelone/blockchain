@@ -12,17 +12,17 @@ import (
 type CLI struct {}
 
 func (cli *CLI) createBlockchain(address string) {
-	bc := CreateBlockchain(address)
-	bc.db.Close()
+	bc := blockchainDs.CreateBlockchain(address)
+	bc.GetDb().Close()
 	fmt.Println("Done!")
 }
 
 func (cli *CLI) getBalance(address string) {
-	bc := NewBlockchain(address)
-	defer bc.db.close()
+	bc := blockchainDs.NewBlockchain(address)
+	defer bc.GetDb().Close()
 
 	balance := 0
-	UTCOs := bc.FindUTXO(address)
+	UTXOs := bc.FindUTXO(address)
 
 	for _, out := range UTXOs {
 		balance += out.Value
@@ -47,8 +47,8 @@ func (cli *CLI) validateArgs() {
 }
 
 func (cli *CLI) printChain() {
-	bc := NewBlockChain("")
-	defer bc.db.Close()
+	bc := blockchainDs.NewBlockchain("")
+	defer bc.GetDb().Close()
 
 	bci := bc.Iterator()
 
@@ -69,11 +69,11 @@ func (cli *CLI) printChain() {
 }
 
 func (cli *CLI) send(from, to string, amount int) {
-	bc := NewBlockchain(from)
-	defer bc.db.Close()
+	bc := blockchainDs.NewBlockchain(from)
+	defer bc.GetDb().Close()
 
-	tx := NewUTXOTransaction(from, to, amount, bc)
-	bc.MineBlock([]*Transaction{tx})
+	tx := blockchainDs.NewUTXOTransaction(from, to, amount, bc)
+	bc.MineBlock([]*blockchainDs.Transaction{tx})
 	fmt.Println("Success!")
 }
 
@@ -86,7 +86,7 @@ func (cli *CLI) Run() {
 	sendCmd := flag.NewFlagSet("send", flag.ExitOnError)
 
 	getBalanceAddress := getBalanceCmd.String("address", "", "The address to get balance for")
-	createBlockAddress := createBlockchainCmd.String("address", "", "The address to send genesis block reward to")
+	createBlockchainAddress := createBlockchainCmd.String("address", "", "The address to send genesis block reward to")
 	sendFrom := sendCmd.String("from", "", "Source wallet address")
 	sendTo := sendCmd.String("to", "", "Destination wallet address")
 	sendAmount := sendCmd.Int("amount", 0, "Amount to send")
